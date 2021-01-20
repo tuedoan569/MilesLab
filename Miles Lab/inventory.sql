@@ -8,46 +8,50 @@
 /* Purpose: This script for keeping track of supply and sale*/
 /************************************************************/
 
-/* Drop tables in order opposite of constraints*/
+/* Drop tables in order opposite of constraints */
+DROP TABLE IF EXISTS SuppliesSale;
 DROP TABLE IF EXISTS Sale;
 DROP TABLE IF EXISTS Orders;
 DROP TABLE IF EXISTS Tavern;
 DROP TABLE IF EXISTS Inventory;
 DROP TABLE IF EXISTS Supply;
 
-DROP TABLE IF EXISTS Users;
-DROP TABLE IF EXISTS Statuses;
+DROP TABLE IF EXISTS GuestClass;
+DROP TABLE IF EXISTS Guest;
+DROP TABLE IF EXISTS ServiceStatus;
 DROP TABLE IF EXISTS Services;
 
 DROP TABLE IF EXISTS Locations;
-DROP TABLE IF EXISTS Product;
 DROP TABLE IF EXISTS Received;
+DROP TABLE IF EXISTS Product;
+
+DROP TABLE IF EXISTS GuestStatus;
+DROP TABLE IF EXISTS Class;
+
 /* Create tables */
 
 CREATE TABLE Locations (
     ID INT IDENTITY(1, 1),
-    Name VARCHAR(250),
-    PRIMARY KEY (ID)
+    Name VARCHAR(250)
 )
 
 CREATE TABLE Product (
     ID INT IDENTITY(1, 1),
     Name VARCHAR(250),
-    Unit VARCHAR(50),
-    PRIMARY KEY (ID)
+    Unit VARCHAR(50)
 )
 
 CREATE TABLE Supply (
     ID INT IDENTITY(1, 1),
     ProductID INT,
-    Quantity INT,
-    PRIMARY KEY (ID)
+    Quantity INT
 )
 
 CREATE TABLE Received (
     ID INT IDENTITY(1, 1),
-    DateReceived DATE,
-    PRIMARY KEY (ID)
+    ProductID INT,
+    Quantity INT,
+    DateReceived DATE
 )
 
 CREATE TABLE Inventory (
@@ -55,16 +59,14 @@ CREATE TABLE Inventory (
     SupplyID INT,
     ProductID INT,
     Quantity INT,
-    ReceivedID INT,
-    PRIMARY KEY (ID)
+    ReceivedID INT
 )
 
 CREATE TABLE Tavern (
     ID INT IDENTITY(1, 1),
     Name VARCHAR(100),
     InventoryID INT,
-    LocationsID INT,
-    PRIMARY KEY (ID)
+    LocationsID INT
 )
 
 CREATE TABLE Orders (
@@ -73,41 +75,107 @@ CREATE TABLE Orders (
     TavernID INT,
     Cost DEC,
     AmountReceived INT,
-    ReceivedID INT,
-    PRIMARY KEY (ID)
+    ReceivedID INT
 )
 
-CREATE TABLE Statuses (
+CREATE TABLE ServiceStatus (
     ID INT IDENTITY(1, 1),
-    Name VARCHAR(50),
-    PRIMARY KEY (ID)
+    Name VARCHAR(50)
 )
 
 CREATE TABLE Services (
     ID INT IDENTITY(1, 1),
-    Name VARCHAR(50),
-    PRIMARY KEY (ID)
+    Name VARCHAR(50)
 )
 
-CREATE TABLE Users (
+CREATE TABLE GuestStatus (
+    ID INT IDENTITY(1, 1),
+    Name VARCHAR(50)
+)
+
+CREATE TABLE Guest (
     ID INT IDENTITY(1, 1),
     Name VARCHAR(100),
-    Phone VARCHAR(20),
-    Email VARCHAR(100),
-    PRIMARY KEY (ID)
+    Note VARCHAR(500),
+    Birthday DATE,
+    Cakeday DATE,
+    GuestStatusID INT
+)
+
+CREATE TABLE Class (
+    ID INT IDENTITY(1, 1),
+    Name VARCHAR(100)
+)
+
+CREATE TABLE GuestClass (
+    GuestID INT, 
+    ClassID INT,
+    Level INT
 )
 
 CREATE TABLE Sale (
     ID INT IDENTITY(1, 1),
-    UsersID INT,
+    GuestID INT,
     TavernID INT,
     ServicesID INT,
-    StatusesID INT,
+    ServiceStatusID INT,
     Price DEC,
     AmountPurchased INT,
-    DatePurchased DATE,
-    PRIMARY KEY (ID)
+    DatePurchased DATE
 )
+
+CREATE TABLE SuppliesSale (
+    ID INT IDENTITY(1, 1),
+    InventoryID INT,
+    SaleID INT, 
+    ProductID INT, 
+    Quantity INT
+)
+
+/* Add Primary Key to Tables */
+
+ALTER TABLE Class 
+ADD PRIMARY KEY (ID);
+
+ALTER TABLE GuestStatus 
+ADD PRIMARY KEY (ID);
+
+ALTER TABLE Received 
+ADD PRIMARY KEY (ID);
+
+ALTER TABLE Product 
+ADD PRIMARY KEY (ID);
+
+ALTER TABLE Locations
+ADD PRIMARY KEY (ID);
+
+ALTER TABLE Services
+ADD PRIMARY KEY (ID);
+
+ALTER TABLE ServiceStatus
+ADD PRIMARY KEY (ID);
+
+ALTER TABLE Guest
+ADD PRIMARY KEY (ID);
+
+ALTER TABLE Supply
+ADD PRIMARY KEY (ID);
+
+ALTER TABLE Inventory 
+ADD PRIMARY KEY (ID);
+
+ALTER TABLE Tavern 
+ADD PRIMARY KEY (ID);
+
+ALTER TABLE Orders
+ADD PRIMARY KEY (ID);
+
+ALTER TABLE Sale
+ADD PRIMARY KEY (ID);
+
+ALTER TABLE SuppliesSale
+ADD PRIMARY KEY (ID);
+
 
 /* Add Constraints/Foreign Key */
 
@@ -137,15 +205,41 @@ FOREIGN KEY (TavernID) REFERENCES Tavern(ID),
 CONSTRAINT FK_Orders_ReceivedID
 FOREIGN KEY (ReceivedID) REFERENCES Received(ID);
 
+ALTER TABLE Received 
+ADD CONSTRAINT FK_Received_ProductID
+FOREIGN KEY (ProductID) REFERENCES Product(ID);
+
 ALTER TABLE Sale 
-ADD CONSTRAINT FK_Sale_UsersID
-FOREIGN KEY (UsersID) REFERENCES Users(ID),
+ADD CONSTRAINT FK_Sale_GuestID
+FOREIGN KEY (GuestID) REFERENCES Guest(ID),
 CONSTRAINT FK_Sale_TavernID 
 FOREIGN KEY (TavernID) REFERENCES Tavern(ID),
 CONSTRAINT FK_Sale_ServicesID 
 FOREIGN KEY (ServicesID) REFERENCES Services(ID),
-CONSTRAINT FK_Sale_StatusesID 
-FOREIGN KEY (StatusesID) REFERENCES Statuses(ID);
+CONSTRAINT FK_Sale_ServiceStatusID 
+FOREIGN KEY (ServiceStatusID) REFERENCES ServiceStatus(ID);
+
+ALTER TABLE Guest 
+ADD CONSTRAINT FK_Guest_GuestStatusID 
+FOREIGN KEY (GuestStatusID) REFERENCES GuestStatus(ID);
+
+ALTER TABLE GuestCLass 
+ADD CONSTRAINT FK_GuestClass_GuestID
+FOREIGN KEY (GuestID) REFERENCES Guest(ID),
+CONSTRAINT FK_GuestClass_ClassID
+FOREIGN KEY (ClassID) REFERENCES Class(ID);
+
+ALTER TABLE SuppliesSale 
+ADD CONSTRAINT FK_SuppliesSale_InventoryID
+FOREIGN KEY (InventoryID) REFERENCES Inventory(ID),
+CONSTRAINT FK_SuppliesSale_SaleID 
+FOREIGN KEY (SaleID) REFERENCES Sale(ID),
+CONSTRAINT FK_SuppliesSale_ProductID
+FOREIGN KEY (ProductID) REFERENCES Product(ID);
+
+
+
+/* Insert Data to tables */ 
 
 INSERT INTO Locations(Name)
 VALUES ('33 Coffee Avenue, Mechanicsville, VA 23111'),
@@ -176,17 +270,14 @@ VALUES (1, 12),
 (4, 60),
 (6, 100);
 
-INSERT INTO Received (DateReceived)
-VALUES ('20210112'),
-('20210111'),
-('20210110'),
-('20210109'),
-('20210108'),
-('20210107'),
-('20210106'),
-('20210105'),
-('20210104'),
-('20210103');
+INSERT INTO Received (ProductID, Quantity, DateReceived)
+VALUES (1, 12, '20210112'),
+(2, 20, '20210111'),
+(2, 49, '20210110'),
+(3, 50, '20210109'),
+(2, 11, '20210108'),
+(4, 60, '20210107'),
+(6, 100, '20210103');
 
 INSERT INTO Inventory (SupplyID, ProductID, Quantity, ReceivedID)
 VALUES (1, 1, 12, 1),
@@ -206,7 +297,7 @@ VALUES ('Tavern1', 1, 1),
 ('Tavern7', 3, 7),
 ('Tavern8', 1, 8);
 
-INSERT INTO Statuses (Name)
+INSERT INTO ServiceStatus (Name)
 VALUES ('Active'),
 ('Inactive'),
 ('Out of Stock'),
@@ -217,16 +308,42 @@ VALUES ('Pool'),
 ('Weapon Sharpening'),
 ('Dart');
 
-INSERT  INTO Users(Name, Phone, Email) 
-VALUES ('Santos Vaughn', '3099349081', 'ejepylludd-3082@yopmail.com'),
-('Domingo Keller', '2315467303', 'ozunnemmym-1545@yopmail.com'),
-('Cary Fox', '9149957176', 'qigigegy-3879@yopmail.com'),
-('Elijah Sandoval', '4092661048', 'uxorufarru-3601@yopmail.com'),
-('Elisa Schmidt', '7702924545', 'omofeke-5683@yopmail.com'),
-('Charlie West', '7349151027', 'rubequtif-3425@yopmail.com'),
-('Mabel Nelson', '4155204264', 'kavarizode-5703@yopmail.com'),
-('Wanda Palmer', '5802458817', 'cirrirrefity-4276@yopmail.com'),
-('Taylor Clark', '5183699086', 'imellegis-6286@yopmail.com');
+INSERT INTO GuestStatus (Name)
+VALUES ('Sick'),
+('Fine'),
+('Hangry'),
+('Raging'),
+('Placid');
+
+INSERT INTO Class (Name)
+VALUES ('Fighter'),
+('Mage'),
+('Archer'),
+('Swordman'),
+('Summoner'),
+('Assassin'),
+('Enchanter');
+
+INSERT  INTO Guest(Name, Note, Birthday, Cakeday, GuestStatusID) 
+VALUES ('Santos Vaughn', 'None', '19700102', '20100404', 1),
+('Domingo Keller', 'None', '19730302', '20110404', 3),
+('Cary Fox', 'None', '19711122', '20130404', 2),
+('Elijah Sandoval', 'None', '19800115', '20130502', 2),
+('Elisa Schmidt', 'None', '19901222', '20151104', 2),
+('Charlie West', 'None', '19990909', '20200401', 2),
+('Mabel Nelson', 'None', '20000810', '20120101', 4),
+('Wanda Palmer', 'None', '19850605', '20171204', 5),
+('Taylor Clark', 'None', '20020419', '20160809', 2);
+
+INSERT INTO GuestClass(GuestID, ClassID, Level)
+VALUES (1, 1, 1),
+(1, 3, 99),
+(2, 2, 50),
+(2, 3, 11),
+(2, 4, 50),
+(3, 3, 30),
+(4, 3, 15),
+(5, 2, 19);
 
 INSERT INTO Orders (SupplyID, TavernID, Cost, AmountReceived, ReceivedID)
 VALUES (1, 1, 100.10, 12, 1),
@@ -236,7 +353,8 @@ VALUES (1, 1, 100.10, 12, 1),
 (5, 5, 222.90, 11, 4),
 (6, 5, 444.44, 60, 5);
 
-INSERT INTO Sale 
+
+INSERT INTO Sale (GuestID, TavernID, ServicesID, ServiceStatusID, Price, AmountPurchased, DatePurchased)
 VALUES (1, 1, 1, 1, 10, 10, '20210113'),
 (2, 2, 1, 1, 10, 10, '20210113'),
 (3, 3, 2, 1, 10, 10, '20210113'),
@@ -246,5 +364,28 @@ VALUES (1, 1, 1, 1, 10, 10, '20210113'),
 (7, 1, 1, 1, 10, 10, '20210113'),
 (8, 1, 1, 1, 10, 10, '20210113');
 
+INSERT INTO SuppliesSale (InventoryID, SaleID, ProductID, Quantity)
+VALUES (1, 1, 1, 2),
+(1, 2, 1, 2),
+(1, 3, 2, 1),
+(1, 4, 4, 7),
+(1, 5, 3, 5),
+(1, 6, 2, 4),
+(1, 7, 1, 23),
+(1, 8, 4, 2);
 
 
+/* Insertion failed due to constraint */
+/*
+INSERT INTO SuppliesSale (InventoryID, SaleID, ProductID, Quantity)
+VALUES (10, 1, 1, 2);*/
+
+/* Insertion failed due to invalid input */
+/*
+INSERT INTO Sale (GuestID, TavernID, ServicesID, ServiceStatusID, Price, AmountPurchased, DatePurchased)
+VALUES (1, 1, 1, 1, 10, 10, '20212113');*/
+
+/*Insertion failed due to mismatch columns and values*/
+/*
+INSERT INTO Orders (SupplyID, TavernID, Cost, AmountReceived, ReceivedID)
+VALUES (1, 1, 100.10, 12);*/
