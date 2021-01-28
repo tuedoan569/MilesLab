@@ -10,6 +10,8 @@
 
 /* Drop tables in order opposite of constraints */
 DROP TABLE IF EXISTS SuppliesSale;
+DROP TABLE IF EXISTS RoomStay;
+DROP TABLE IF EXISTS Room;
 DROP TABLE IF EXISTS Sale;
 DROP TABLE IF EXISTS Orders;
 DROP TABLE IF EXISTS Tavern;
@@ -21,6 +23,8 @@ DROP TABLE IF EXISTS Guest;
 DROP TABLE IF EXISTS ServiceStatus;
 DROP TABLE IF EXISTS Services;
 
+DROP TABLE IF EXISTS RoomStatus;
+
 DROP TABLE IF EXISTS Locations;
 DROP TABLE IF EXISTS Received;
 DROP TABLE IF EXISTS Product;
@@ -31,108 +35,129 @@ DROP TABLE IF EXISTS Class;
 /* Create tables */
 
 CREATE TABLE Locations (
-    ID INT IDENTITY(1, 1),
-    Name VARCHAR(250)
+    ID INT IDENTITY(1, 1) NOT NULL,
+    Name VARCHAR(250) NOT NULL
 )
 
 CREATE TABLE Product (
-    ID INT IDENTITY(1, 1),
-    Name VARCHAR(250),
-    Unit VARCHAR(50)
+    ID INT IDENTITY(1, 1) NOT NULL,
+    Name VARCHAR(250) NOT NULL,
+    Unit VARCHAR(50) NOT NULL
 )
 
 CREATE TABLE Supply (
-    ID INT IDENTITY(1, 1),
-    ProductID INT,
-    Quantity INT
+    ID INT IDENTITY(1, 1) NOT NULL,
+    ProductID INT NOT NULL,
+    Quantity INT NOT NULL
 )
 
 CREATE TABLE Received (
-    ID INT IDENTITY(1, 1),
-    ProductID INT,
-    Quantity INT,
-    DateReceived DATE
+    ID INT IDENTITY(1, 1) NOT NULL,
+    ProductID INT NOT NULL,
+    Quantity INT NOT NULL,
+    DateReceived DATE NOT NULL
 )
 
 CREATE TABLE Inventory (
-    ID INT IDENTITY(1, 1),
-    SupplyID INT,
-    ProductID INT,
-    Quantity INT,
-    ReceivedID INT
+    ID INT IDENTITY(1, 1) NOT NULL,
+    SupplyID INT NOT NULL,
+    ProductID INT NOT NULL,
+    Quantity INT NOT NULL,
+    ReceivedID INT NOT NULL
 )
 
 CREATE TABLE Tavern (
-    ID INT IDENTITY(1, 1),
-    Name VARCHAR(100),
-    InventoryID INT,
-    LocationsID INT
+    ID INT IDENTITY(1, 1) NOT NULL,
+    Name VARCHAR(100) NOT NULL,
+    InventoryID INT NOT NULL,
+    LocationsID INT NOT NULL
 )
 
 CREATE TABLE Orders (
-    ID INT IDENTITY(1, 1),
-    SupplyID INT,
-    TavernID INT,
-    Cost DEC,
-    AmountReceived INT,
-    ReceivedID INT
+    ID INT IDENTITY(1, 1) NOT NULL,
+    SupplyID INT NOT NULL,
+    TavernID INT NOT NULL,
+    Cost DEC NOT NULL,
+    AmountReceived INT NOT NULL,
+    ReceivedID INT NOT NULL
 )
 
 CREATE TABLE ServiceStatus (
-    ID INT IDENTITY(1, 1),
-    Name VARCHAR(50)
+    ID INT IDENTITY(1, 1) NOT NULL,
+    Name VARCHAR(50) NOT NULL
 )
 
 CREATE TABLE Services (
-    ID INT IDENTITY(1, 1),
-    Name VARCHAR(50)
+    ID INT IDENTITY(1, 1) NOT NULL,
+    Name VARCHAR(50) NOT NULL
+)
+
+CREATE TABLE RoomStay (
+    ID INT IDENTITY(1, 1) NOT NULL,
+    SaleID INT NOT NULL, 
+    GuestID INT NOT NULL,
+    RoomID INT NOT NULL,
+    StayDate DATE NOT NULL,
+    Rate DEC NOT NULL
+)
+
+CREATE TABLE Room (
+    ID INT IDENTITY(1, 1) NOT NULL,
+    TavernID INT NOT NULL,
+    RoomStatusID INT NOT NULL
+)
+
+CREATE TABLE RoomStatus (
+    ID INT IDENTITY(1, 1) NOT NULL,
+    Name VARCHAR(20) NOT NULL
 )
 
 CREATE TABLE GuestStatus (
-    ID INT IDENTITY(1, 1),
-    Name VARCHAR(50)
+    ID INT IDENTITY(1, 1) NOT NULL,
+    Name VARCHAR(50) NOT NULL
 )
 
 CREATE TABLE Guest (
-    ID INT IDENTITY(1, 1),
-    Name VARCHAR(100),
-    Note VARCHAR(500),
-    Birthday DATE,
-    Cakeday DATE,
-    GuestStatusID INT
+    ID INT IDENTITY(1, 1) NOT NULL,
+    FullName VARCHAR(100) NOT NULL,
+    Note VARCHAR(500) NOT NULL,
+    Birthday DATE NOT NULL,
+    Cakeday DATE NOT NULL,
+    GuestStatusID INT NOT NULL
 )
 
 CREATE TABLE Class (
-    ID INT IDENTITY(1, 1),
-    Name VARCHAR(100)
+    ID INT IDENTITY(1, 1) NOT NULL,
+    Name VARCHAR(100) NOT NULL
 )
 
 CREATE TABLE GuestClass (
-    GuestID INT, 
-    ClassID INT,
-    Level INT
+    GuestID INT NOT NULL, 
+    ClassID INT NOT NULL,
+    Level INT NOT NULL
 )
 
 CREATE TABLE Sale (
-    ID INT IDENTITY(1, 1),
-    GuestID INT,
-    TavernID INT,
-    ServicesID INT,
-    ServiceStatusID INT,
-    Price DEC,
-    AmountPurchased INT,
-    DatePurchased DATE
+    ID INT IDENTITY(1, 1) NOT NULL,
+    GuestID INT NOT NULL,
+    TavernID INT NOT NULL,
+    ServicesID INT NOT NULL,
+    ServiceStatusID INT NOT NULL,
+    Price DEC NOT NULL,
+    AmountPurchased INT NOT NULL,
+    DatePurchased DATE NOT NULL
 )
 
 CREATE TABLE SuppliesSale (
-    ID INT IDENTITY(1, 1),
-    InventoryID INT,
-    SaleID INT, 
-    ProductID INT, 
-    Quantity INT
+    ID INT IDENTITY(1, 1) NOT NULL,
+    InventoryID INT NOT NULL,
+    SaleID INT NOT NULL, 
+    ProductID INT NOT NULL, 
+    Quantity INT NOT NULL
 )
 
 /* Add Primary Key to Tables */
+GO
 
 ALTER TABLE Class 
 ADD PRIMARY KEY (ID);
@@ -154,6 +179,18 @@ ADD PRIMARY KEY (ID);
 
 ALTER TABLE ServiceStatus
 ADD PRIMARY KEY (ID);
+
+ALTER TABLE RoomStay
+ADD PRIMARY KEY (ID);
+
+ALTER TABLE Room
+ADD PRIMARY KEY (ID);
+
+ALTER TABLE RoomStatus
+ADD PRIMARY KEY (ID);
+
+ALTER TABLE GuestClass
+ADD PRIMARY KEY (GuestID, ClassID);
 
 ALTER TABLE Guest
 ADD PRIMARY KEY (ID);
@@ -197,6 +234,12 @@ FOREIGN KEY (InventoryID) REFERENCES Inventory(ID),
 CONSTRAINT FK_Tavern_LocationsID 
 FOREIGN KEY (LocationsID) REFERENCES Locations(ID);
 
+ALTER TABLE Room 
+ADD CONSTRAINT FK_Room_TavernID 
+FOREIGN KEY (TavernID) REFERENCES Tavern(ID),
+CONSTRAINT FK_Room_RoomStatusID
+FOREIGN KEY (RoomStatusID) REFERENCES RoomStatus(ID);
+
 ALTER TABLE Orders 
 ADD CONSTRAINT FK_Orders_SupplyID
 FOREIGN KEY (SupplyID) REFERENCES Supply(ID),
@@ -229,6 +272,14 @@ FOREIGN KEY (GuestID) REFERENCES Guest(ID),
 CONSTRAINT FK_GuestClass_ClassID
 FOREIGN KEY (ClassID) REFERENCES Class(ID);
 
+ALTER TABLE RoomStay
+ADD CONSTRAINT FK_Room_RoomStay_SaleID
+FOREIGN KEY (SaleID) REFERENCES Sale(ID),
+CONSTRAINT FK_Room_RoomStay_GuestID
+FOREIGN KEY (GuestID) REFERENCES Guest(ID),
+CONSTRAINT FK_Room_RoomStay_RoomID
+FOREIGN KEY (RoomID) REFERENCES Room(ID);
+
 ALTER TABLE SuppliesSale 
 ADD CONSTRAINT FK_SuppliesSale_InventoryID
 FOREIGN KEY (InventoryID) REFERENCES Inventory(ID),
@@ -237,6 +288,7 @@ FOREIGN KEY (SaleID) REFERENCES Sale(ID),
 CONSTRAINT FK_SuppliesSale_ProductID
 FOREIGN KEY (ProductID) REFERENCES Product(ID);
 
+GO
 
 
 /* Insert Data to tables */ 
@@ -324,7 +376,7 @@ VALUES ('Fighter'),
 ('Assassin'),
 ('Enchanter');
 
-INSERT  INTO Guest(Name, Note, Birthday, Cakeday, GuestStatusID) 
+INSERT  INTO Guest(FullName, Note, Birthday, Cakeday, GuestStatusID) 
 VALUES ('Santos Vaughn', 'None', '19700102', '20100404', 1),
 ('Domingo Keller', 'None', '19730302', '20110404', 3),
 ('Cary Fox', 'None', '19711122', '20130404', 2),
@@ -333,7 +385,8 @@ VALUES ('Santos Vaughn', 'None', '19700102', '20100404', 1),
 ('Charlie West', 'None', '19990909', '20200401', 2),
 ('Mabel Nelson', 'None', '20000810', '20120101', 4),
 ('Wanda Palmer', 'None', '19850605', '20171204', 5),
-('Taylor Clark', 'None', '20020419', '20160809', 2);
+('Taylor Clark', 'None', '20020419', '20160809', 2),
+('Taylor Clark', 'None', '19980429', '20150209', 2);
 
 INSERT INTO GuestClass(GuestID, ClassID, Level)
 VALUES (1, 1, 1),
@@ -356,13 +409,19 @@ VALUES (1, 1, 100.10, 12, 1),
 
 INSERT INTO Sale (GuestID, TavernID, ServicesID, ServiceStatusID, Price, AmountPurchased, DatePurchased)
 VALUES (1, 1, 1, 1, 10, 10, '20210113'),
-(2, 2, 1, 1, 10, 10, '20210113'),
-(3, 3, 2, 1, 10, 10, '20210113'),
-(4, 2, 1, 1, 10, 10, '20210113'),
-(5, 1, 1, 1, 10, 10, '20210113'),
-(6, 3, 2, 1, 10, 10, '20210113'),
-(7, 1, 1, 1, 10, 10, '20210113'),
-(8, 1, 1, 1, 10, 10, '20210113');
+(2, 2, 1, 1, 90, 90, '20210113'),
+(3, 3, 2, 1, 80, 80, '20210113'),
+(4, 2, 1, 1, 110, 110, '20210113'),
+(5, 1, 1, 1, 200, 200, '20210113'),
+(6, 3, 2, 1, 30, 30, '20210113'),
+(7, 1, 1, 1, 600, 600, '20210113'),
+(8, 6, 1, 1, 50, 50, '20210113'),
+(1, 5, 1, 1, 70, 70, '20210113'),
+(1, 4, 1, 1, 110, 110, '20210113'),
+(1, 4, 1, 1, 20, 20, '20210113'),
+(2, 4, 1, 1, 50, 50, '20210113'),
+(3, 5, 1, 1, 60, 60, '20210113'),
+(4, 6, 1, 1, 50, 50, '20210113');
 
 INSERT INTO SuppliesSale (InventoryID, SaleID, ProductID, Quantity)
 VALUES (1, 1, 1, 2),
