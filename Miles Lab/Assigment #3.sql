@@ -25,11 +25,20 @@ Select Top 10 * from Sale
 Order By Price desc;
 
 /* Write a query to return all the values stored in all Lookup Tables */
+
+Select * From Services Union All 
+Select * From ServiceStatus Union All
+Select * From GuestStatus Union All
+Select * From Locations Union All 
+Select * From RoomStatus Union All
+Select * From Class;
+
+/*
 Select b.FullName, c.Name, a.Level from GuestCLass as a
 Join Guest as b
 On a.GuestID = b.ID
 Join Class as c
-On a.ClassID = c.ID;
+On a.ClassID = c.ID;*/
 
 /*  Write a query that returns Guest Classes with Levels and Generate a new column with a label for their level grouping (lvl 1-10, 10-20, etc) */
 Select GuestID, 
