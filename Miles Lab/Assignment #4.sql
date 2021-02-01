@@ -67,13 +67,13 @@ CONCAT('CREATE TABLE ',TABLE_NAME, ' (') as queryPiece
 FROM INFORMATION_SCHEMA.TABLES
  WHERE TABLE_NAME = 'Tavern'
 UNION ALL
-SELECT CONCAT(cols.COLUMN_NAME, ' ',
+SELECT CONCAT(cols.COLUMN_NAME, ' ' ,cols.DATA_TYPE, 
 (	CASE WHEN sysOC.is_identity = 1 AND cols.COLUMN_NAME = sysOC.ColumName
 	Then 
-		'IDENTITY '
+		' IDENTITY '
 	Else '' 
 	END 
-) ,cols.DATA_TYPE, 
+),
 (
 	CASE WHEN CHARACTER_MAXIMUM_LENGTH IS NOT NULL 
 	Then CONCAT
@@ -113,6 +113,9 @@ ON sysOC.name = cols.TABLE_NAME
  WHERE cols.TABLE_NAME = 'Tavern'
 UNION ALL
 SELECT ')'; 
+
+
+
 
 
 
