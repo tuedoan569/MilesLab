@@ -14,9 +14,12 @@ DROP TABLE IF EXISTS RoomStay;
 DROP TABLE IF EXISTS Room;
 DROP TABLE IF EXISTS Sale;
 DROP TABLE IF EXISTS Orders;
+DROP TABLE IF EXISTS Users;
 DROP TABLE IF EXISTS Tavern;
 DROP TABLE IF EXISTS Inventory;
 DROP TABLE IF EXISTS Supply;
+
+DROP TABLE IF EXISTS Roles;
 
 DROP TABLE IF EXISTS GuestClass;
 DROP TABLE IF EXISTS Guest;
@@ -64,6 +67,18 @@ CREATE TABLE Inventory (
     ProductID INT NOT NULL,
     Quantity INT NOT NULL,
     ReceivedID INT NOT NULL
+)
+
+CREATE TABLE Users (
+    ID INT IDENTITY(1, 1) NOT NULL,
+    FullName VARCHAR(100) NOT NULL,
+    TavernID INT NOT NULL,
+    RolesID INT NOT NULL
+)
+
+CREATE TABLE Roles (
+    ID INT IDENTITY(1, 1) NOT NULL,
+    Name VARCHAR (50) NOT NULL
 )
 
 CREATE TABLE Tavern (
@@ -201,6 +216,12 @@ ADD PRIMARY KEY (ID);
 ALTER TABLE Inventory 
 ADD PRIMARY KEY (ID);
 
+ALTER TABLE Users 
+ADD PRIMARY KEY (ID);
+
+ALTER TABLE Roles
+ADD PRIMARY KEY (ID);
+
 ALTER TABLE Tavern 
 ADD PRIMARY KEY (ID);
 
@@ -227,6 +248,12 @@ CONSTRAINT FK_Inventory_ProductID
 FOREIGN KEY (ProductID) REFERENCES Product(ID),
 CONSTRAINT FK_Inventory_ReceivedID
 FOREIGN KEY (ReceivedID) REFERENCES Received(ID);
+
+ALTER TABLE Users
+ADD CONSTRAINT FK_Users_TavernID 
+FOREIGN KEY (TavernID) REFERENCES Tavern(ID),
+CONSTRAINT FK_Users_RolesID 
+FOREIGN KEY (RolesID) REFERENCES ROles(ID);
 
 ALTER TABLE Tavern 
 ADD CONSTRAINT FK_Tavern_InventoryID 
@@ -339,6 +366,13 @@ VALUES (1, 1, 12, 1),
 (5, 2, 11, 4),
 (6, 4, 60, 5);
 
+INSERT INTO Roles (Name) 
+VALUES ('Admin'),
+('Owner'),
+('Manager'),
+('IT');
+
+
 INSERT INTO Tavern(Name, InventoryID, LocationsID) 
 VALUES ('Tavern1', 1, 1),
 ('Tavern2', 1, 2),
@@ -348,6 +382,16 @@ VALUES ('Tavern1', 1, 1),
 ('Tavern6', 3, 6),
 ('Tavern7', 3, 7),
 ('Tavern8', 1, 8);
+
+INSERT INTO Users (FullName, TavernID, RolesID)
+VALUES ('Rose Davis', 1, 1),
+('Latoya Moore', 1, 1),
+('Maria Lewis', 1, 2),
+('Eric Vaughn', 1, 3),
+('Stuart Gray', 1, 4),
+('Sean Kelly', 1, 4),
+('Shannon Peterson', 1, 4);
+
 
 INSERT INTO ServiceStatus (Name)
 VALUES ('Active'),
@@ -393,7 +437,7 @@ VALUES (1, 1, 1),
 (1, 3, 99),
 (2, 2, 50),
 (2, 3, 11),
-(2, 4, 50),
+(2, 4, 60),
 (3, 3, 30),
 (4, 3, 15),
 (5, 2, 19);
@@ -432,6 +476,32 @@ VALUES (1, 1, 1, 2),
 (1, 6, 2, 4),
 (1, 7, 1, 23),
 (1, 8, 4, 2);
+
+INSERT INTO RoomStatus (Name)
+VALUES ('Occupied'),
+('Vacant & Clean'),
+('Vacant & Dirty'),
+('Check Out'),
+('Out of Order');
+
+INSERT INTO Room (TavernID, RoomStatusID) 
+VALUES (1, 1),
+(1, 1),
+(1, 1),
+(1, 2),
+(1, 2),
+(1, 2),
+(1, 2),
+(1, 3),
+(1, 5),
+(1, 4),
+(1, 2);
+
+INSERT INTO RoomStay (SaleID, GuestID, RoomID, StayDate, Rate)
+VALUES (1, 1, 1, '20210101', 10.00),
+(2, 2, 1, '20210106', 10.00),
+(3, 3, 1, '20210131', 10.00);
+
 
 
 /* Insertion failed due to constraint */
