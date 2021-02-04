@@ -42,20 +42,24 @@ ON sal.ServicesID = ser.ID
 ORDER BY Price DESC;
 
 /* Write a query that returns guests with 2 or more classes */
-SELECT GuestID, COUNT(*) ClassCount FROM GuestClass
+SELECT GuestID ClassCount FROM GuestClass
 GROUP BY GuestID
 HAVING COUNT(*) > 1; 
 
 /* Write a query that returns guests with 2 or more classes with levels higher than 5 */
-SELECT GuestID, COUNT(*) ClassCount FROM GuestClass
+SELECT GuestID FROM GuestClass
 WHERE Level > 5
 GROUP BY GuestID
-HAVING COUNT(*) > 1; 
+HAVING COUNT(*) > 1;
+
+/*SELECT GuestID, COUNT(*) ClassCount FROM GuestClass
+WHERE Level > 5
+GROUP BY GuestID
+HAVING COUNT(*) > 1; */
 
 /* Write a query that returns guests with ONLY their highest level class */
 SELECT DISTINCT GuestID, MAX(Level) FROM GuestClass
-GROUP BY GuestID
-HAVING MAX(Level) > 1;
+GROUP BY GuestID;
 
 /* Write a query that returns guests that stay within a date range. */
 SELECT * FROM RoomStay
