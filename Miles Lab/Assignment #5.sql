@@ -70,51 +70,37 @@ CREATE FUNCTION dbo.getOpenRoom(@openDate DATE)
 RETURNS TABLE 
 AS 
 RETURN (
-	SELECT r.ID, t.Name TavernName, rs.Name Status FROM Room r
+	SELECT ra.ID, rs.Name RoomAvailability, t.Name TaverenName FROM RoomAvail ra
+	JOIN Room r
+	ON ra.RoomID = r.ID
 	JOIN Tavern t
 	ON r.TavernID = t.ID
 	JOIN RoomStatus rs
-	ON r.RoomStatusID = rs.ID
-	WHERE rs.ID = 2 
-	UNION ALL
-	SELECT r.ID, t.Name TavernName, rss.Name Status FROM RoomStay rs
-	JOIN Room r
-	ON rs.RoomID = r.ID
-	JOIN Tavern t
-	ON r.TavernID = t.ID
-	JOIN RoomStatus rss
-	ON r.RoomStatusID = rss.ID
-	WHERE rs.StayDate = @openDate
+	On Ra.RoomStatusID = rs.ID
+	WHERE CurrentDate = @openDate AND RoomStatusID = 2
 );
 
 SELECT * FROM getOpenRoom('20210101');
 
 /* Modify the same function from 5 to instead return a report of prices in a range (min and max prices) - Return Rooms and their taverns based on price inputs */
-IF OBJECT_ID(N'dbo.getPriceRange', N'IF') IS NOT NULL
-	DROP FUNCTION getPriceRange;
+IF OBJECT_ID(N'dbo.findRoom', N'IF') IS NOT NULL
+	DROP FUNCTION findRoom;
 GO 
-CREATE FUNCTION dbo.getPriceRange()
+CREATE FUNCTION dbo.findRoom(@min INT, @max INT)
 RETURNS TABLE 
 AS 
 RETURN (
-	SELECT FORMAT(MIN(rs.Rate), 'N2') Range, r.ID RoomNum, t.Name TavernName FROM RoomStay rs
+	SELECT r.ID, t.Name, Rate FROM RoomStay rs
+	JOIN RoomAvail ra 
+	ON rs.RoomAvailID = ra.ID
 	JOIN Room r
-	ON rs.RoomID = r.ID
+	ON ra.RoomID = r.ID
 	JOIN Tavern t
 	ON r.TavernID = t.ID
-	WHERE rs.Rate = (SELECT MIN(Rate) FROM RoomStay)
-	GROUP BY r.ID, t.Name
-	UNION ALL 
-	SELECT  FORMAT(MAX(rs.Rate), 'N2'),  r.ID,  t.Name FROM RoomStay rs
-	JOIN Room r
-	ON rs.RoomID = r.ID
-	JOIN Tavern t
-	ON r.TavernID = t.ID
-	WHERE rs.Rate = (SELECT MAX(Rate) FROM RoomStay)
-	GROUP BY r.ID, t.Name
+	WHERE rs.Rate >= @min AND rs.Rate <= @max
 );
 
-SELECT * FROM getPriceRange();
+SELECT * FROM findRoom(9, 10);
 
 /* Write a command that uses the result from 6 to Create a Room in another tavern that undercuts (is less than) the cheapest room by a penny - thereby making the new room the cheapest one */
 Select 'INSERT INTO RoomStay (' 
@@ -124,7 +110,7 @@ Case When ORDINAL_POSITION = (select COUNT(*)From INFORMATION_SCHEMA.COLUMNS Whe
 Where TABLE_NAME = 'RoomStay'
 UNION All Select ') VALUES ('
 UNION All Select CONCAT(10 ,',', 10, ',', 9, ',', 5, ',', '''20210110''', ',', (
-SELECT  MIN(CAST (Range AS NUMERIC)) - 0.01 FROM getPriceRange()), ');')
+SELECT  MIN(CAST (Rate AS NUMERIC)) - 0.01 FROM findRoom(9, 10)), ');')
 
 UNION ALL 
 
@@ -134,7 +120,18 @@ Case When ORDINAL_POSITION = (select COUNT(*)From INFORMATION_SCHEMA.COLUMNS Whe
 ) From INFORMATION_SCHEMA.COLUMNS
 Where TABLE_NAME = 'Room'
 UNION All Select ') VALUES ('
-UNION All Select CONCAT(10 ,',', 2, ',', 2, ');');
+UNION All Select CONCAT(10 ,',', 2, ');')
+
+UNION ALL 
+
+Select 'INSERT INTO RoomAvail (' 
+UNION All Select CONCAT(COLUMN_NAME,
+Case When ORDINAL_POSITION = (select COUNT(*)From INFORMATION_SCHEMA.COLUMNS Where TABLE_NAME = 'RoomAvail')  Then Null Else ',' End
+) From INFORMATION_SCHEMA.COLUMNS
+Where TABLE_NAME = 'RoomAvail'
+UNION All Select ') VALUES ('
+UNION All Select CONCAT(20 ,',',10 ,',', 2, ',', GETDATE(), ');');
+
 
 
 

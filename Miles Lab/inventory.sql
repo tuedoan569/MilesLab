@@ -11,6 +11,7 @@
 /* Drop tables in order opposite of constraints */
 DROP TABLE IF EXISTS SuppliesSale;
 DROP TABLE IF EXISTS RoomStay;
+DROP TABLE IF EXISTS RoomAvail;
 DROP TABLE IF EXISTS Room;
 DROP TABLE IF EXISTS Sale;
 DROP TABLE IF EXISTS Orders;
@@ -111,15 +112,21 @@ CREATE TABLE RoomStay (
     ID INT IDENTITY(1, 1) NOT NULL,
     SaleID INT NOT NULL, 
     GuestID INT NOT NULL,
-    RoomID INT NOT NULL,
+    RoomAvailID INT NOT NULL,
     StayDate DATE NOT NULL,
     Rate DEC NOT NULL
+)
+
+CREATE TABLE RoomAvail (
+    ID INT IDENTITY(1, 1) NOT NULL,
+    RoomID INT NOT NULL,
+    RoomStatusID INT NOT NULL,
+    CurrentDate DATE NOT NULL
 )
 
 CREATE TABLE Room (
     ID INT IDENTITY(1, 1) NOT NULL,
     TavernID INT NOT NULL,
-    RoomStatusID INT NOT NULL
 )
 
 CREATE TABLE RoomStatus (
@@ -198,6 +205,9 @@ ADD PRIMARY KEY (ID);
 ALTER TABLE RoomStay
 ADD PRIMARY KEY (ID);
 
+ALTER TABLE RoomAvail
+ADD PRIMARY KEY (ID);
+
 ALTER TABLE Room
 ADD PRIMARY KEY (ID);
 
@@ -261,10 +271,10 @@ FOREIGN KEY (InventoryID) REFERENCES Inventory(ID),
 CONSTRAINT FK_Tavern_LocationsID 
 FOREIGN KEY (LocationsID) REFERENCES Locations(ID);
 
-ALTER TABLE Room 
-ADD CONSTRAINT FK_Room_TavernID 
-FOREIGN KEY (TavernID) REFERENCES Tavern(ID),
-CONSTRAINT FK_Room_RoomStatusID
+ALTER TABLE RoomAvail 
+ADD CONSTRAINT FK_RoomAvail_RoomID 
+FOREIGN KEY (RoomID) REFERENCES Room(ID),
+CONSTRAINT FK_RoomAvail_RoomStatusID
 FOREIGN KEY (RoomStatusID) REFERENCES RoomStatus(ID);
 
 ALTER TABLE Orders 
@@ -300,12 +310,12 @@ CONSTRAINT FK_GuestClass_ClassID
 FOREIGN KEY (ClassID) REFERENCES Class(ID);
 
 ALTER TABLE RoomStay
-ADD CONSTRAINT FK_Room_RoomStay_SaleID
+ADD CONSTRAINT FK_RoomStay_SaleID
 FOREIGN KEY (SaleID) REFERENCES Sale(ID),
-CONSTRAINT FK_Room_RoomStay_GuestID
+CONSTRAINT FK_RoomStay_GuestID
 FOREIGN KEY (GuestID) REFERENCES Guest(ID),
-CONSTRAINT FK_Room_RoomStay_RoomID
-FOREIGN KEY (RoomID) REFERENCES Room(ID);
+CONSTRAINT FK_RoomStay_RoomAvailID
+FOREIGN KEY (RoomAvailID) REFERENCES RoomAvail(ID);
 
 ALTER TABLE SuppliesSale 
 ADD CONSTRAINT FK_SuppliesSale_InventoryID
@@ -484,20 +494,34 @@ VALUES ('Occupied'),
 ('Check Out'),
 ('Out of Order');
 
-INSERT INTO Room (TavernID, RoomStatusID) 
-VALUES (1, 1),
-(1, 1),
-(1, 1),
-(1, 2),
-(1, 2),
-(1, 2),
-(1, 2),
-(1, 3),
-(1, 5),
-(1, 4),
-(1, 2);
+INSERT INTO Room (TavernID) 
+VALUES  (1),(1),(1),(1),(1),(1),(1);
 
-INSERT INTO RoomStay (SaleID, GuestID, RoomID, StayDate, Rate)
+INSERT INTO RoomAvail (RoomID, RoomStatusID, CurrentDate)
+VALUES (1, 1, '20210101'),
+(2, 2, '20210101'),
+(3, 2, '20210101'),
+(4, 2, '20210101'),
+(5, 3, '20210101'),
+(6, 5, '20210101'),
+(7, 5, '20210101'),
+(1, 1, '20210106'),
+(2, 2, '20210106'),
+(3, 2, '20210106'),
+(4, 2, '20210106'),
+(5, 3, '20210106'),
+(6, 5, '20210106'),
+(7, 5, '20210106'),
+(1, 1, '20210131'),
+(2, 2, '20210131'),
+(3, 2, '20210131'),
+(4, 2, '20210131'),
+(5, 3, '20210131'),
+(6, 5, '20210131'),
+(7, 5, '20210131');
+
+
+INSERT INTO RoomStay (SaleID, GuestID, RoomAvailID, StayDate, Rate)
 VALUES (1, 1, 1, '20210101', 8.00),
 (2, 2, 2, '20210106', 9.00),
 (3, 3, 3, '20210131', 10.00);
